@@ -1,16 +1,17 @@
 const express = require('express')
 const router = new express.Router()
-const coligadas = require('../controllers/coligadas.js')
-const secoes = require('../controllers/secoes.js')
-const funcionario = require('../controllers/funcionario.js')
+
+const publicThings = require('./controllers/public-things.js')
+const privateThings = require('./controllers/private-things.js')
+const logins = require('./controllers/logins.js')
     
-router.route('/coligadas/:coligada?')
-    .get(coligadas.get)
+router.route('/public_things')
+    .get(publicThings.get)
 
-router.route('/secoes/:coligada?')
-    .get(secoes.get)
+router.route('/private_things')
+    .get(privateThings.get)
 
-router.route('/funcionario/:coligada?/:matricula?')
-    .get(funcionario.get)
+router.route('/logins')
+    .get(logins.get)
    
 module.exports = router
