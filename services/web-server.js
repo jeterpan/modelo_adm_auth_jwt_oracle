@@ -1,10 +1,9 @@
 const http = require('http')
 const express = require('express')
 const webServerConfig = require('../config/web-server.js')
-//const database = require('./database.js')
 const router = require('./router.js')
 const morgan = require('morgan')
-const cors = require('cors')
+//const cors = require('cors')
 
 let hpttServer;
 
