@@ -1,23 +1,75 @@
-const express = require('express');
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
-const app;
-const router;
-const port = 3000;
 
-app = express();
+const webServer = require('./services/web-server.js')
+const dbConfig = require('./config/database.js')
 
-app.use(morgan('combined'));
-app.use(bodyParser.json());
+const defaultThreadPoolSize = 4
+process.env.UV_THREADPOOL_SIZE = dbConfig.hrPool.poolMax + defaultThreadPoolSize
 
-router = express.Router();
+async function startup(){
+    console.log('Iniciando aplicacao...')
 
-router.get('/public_things', function(req, res) {
-   res.json({"message": "Here are the public things..."});
-});
+    try {
+        console.log('Inicializando o modulo de banco de dados')
 
-app.use('/api', router);
+        await database.initialize()
+    } catch (err) {
+        console.error(err)
 
-app.listen(port, function() {
-    console.log('Web server listening on localhost:' + port);
-});
+        process.exit(1)
+    }
+
+    try{
+        console.log('Inicializando o modulo webServer...')
+
+        await webServer.initialize()
+    } catch (err) {
+        console.error(err)
+
+        process.exit(1)
+    }
+}
+
+startup();
+
+async function shutdown(e) {
+    let err = e
+
+    console.log('Desligando')
+
+    try {
+        console.log('Fechando o modulo webServer')
+
+        await webServer.close()
+    } catch (e) {
+        console.log('Erro encontrado', e)
+
+        err = err || e
+    }
+
+    console.log('Saindo do processo')
+
+    if(err) {
+        process.exit(1)
+    } else {
+        process.exit(0)
+    }
+}
+
+process.on('SIGTERM', () => {
+    console.log('Recebido SIGTERM')
+
+    shutdown()
+})
+
+process.on('SIGINT', ()=> {
+    console.log('Recebido SIGINT')
+
+    shutdown()
+})
+
+process.on('uncaughtException', err => {
+    console.log('Uncaught exception')
+    console.error(err)
+
+    shutdown(err)
+})
