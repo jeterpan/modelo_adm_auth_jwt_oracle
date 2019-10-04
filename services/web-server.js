@@ -7,7 +7,7 @@ const morgan = require('morgan')
 const webServerConfig = require('../config/web-server.js')
 const router = require('./router.js')
 
-let hpttServer;
+let httpServer;
 
 function initialize(){
     return new Promise((resolve, reject) => {

@@ -1,6 +1,6 @@
-
 const webServer = require('./services/web-server.js')
 const dbConfig = require('./config/database.js')
+const database = require('./services/database.js')
 
 const defaultThreadPoolSize = 4
 process.env.UV_THREADPOOL_SIZE = dbConfig.hrPool.poolMax + defaultThreadPoolSize
