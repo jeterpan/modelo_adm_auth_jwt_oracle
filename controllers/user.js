@@ -2,7 +2,7 @@ const oracledb = require('oracledb')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-config = require('../config/auth.js')
+configAuth = require('../config/auth.js')
 configBanco = require('../config/database')
 
 const database = require('../services/database.js')
@@ -38,36 +38,54 @@ async function get(req, res, next) {
 
 module.exports.get = get
 
-
 // Criar usuario
 
 function post(req, res, next) {
-    var usuario = {
+    let usuario = {
         email: req.body.email
     }
 
-    var senhaDesembaralhada = req.body.senha
+    const senhaDesembaralhada = req.body.senha
 
-    // Gera um "salzinho" para ser usado na geração da senha
-    bcrypt.genSalt(10, function(erro, salt) {
-        if (erro) {
-            return next(erro)
-        }
-
-        // Gera a senha
-        bcrypt.hash(senhaDesembaralhada, salt, function(erro, hash) {
+        // Gera um "salzinho" para ser usado na geração da senha
+        bcrypt.genSalt(10, function(erro, salt) {
             if (erro) {
                 return next(erro)
             }
+    
+            // Gera a senha
+            bcrypt.hash(senhaDesembaralhada, salt, function(erro, hash) {
+                if (erro) {
+                    return next(erro)
+                }
+                return(hash)
+            })
         })
 
-        // Atribui a senha ao usuário
-        usuario.senhaEmbaralhada = hash
+        usuario.senhaEmbaralhada = embaralhaSenha(senhaDesembaralhada)
 
-        insereUsuario
-    })
+        insereUsuario(usuario, function(err, usuario) {
+            let payload
 
+            if (err) {
+                return next(err)
+            }
+
+            payload = {
+                sub: usuario.email,
+                papel: usuario.papel
+            }
+
+            res.status(200).json({
+                usuario: usuario,
+                token: jwt.sign(payload, configAuth.jwtSecretKey, {expiresInMinutes: 480})
+            })
+
+        }
+    )
 }
+
+module.exports.post = post
 
 // Insere usuario no banco de dados
 function insereUsuario(usuario, cb) {
@@ -90,7 +108,8 @@ function insereUsuario(usuario, cb) {
                  into
                   :rid,
                   :remail,
-                  :rpapel`,
+                  :rpapel
+                `,
                 {
                     email: usuario.email.toLowerCase(),
                     senha: usuario.senhaEmbaralhada,
